@@ -1,5 +1,9 @@
-# projet_du_chemar
-pas cher pas cher
+# projet_du_chemar #
 
-<img src="https://github.com/Brautantoine/projet_du_chemar/blob/master/gestionDeProjet/Schema/Synoptique/SynoptiqueV1.png"  alt="drawing" width="720"/>
+> This branch is a subproject to help connect to the ESP8266 without Serial Converter
+
+You can connect the `STM32F303RE` to a PC with the embedded ST-LINK USB Serial Converter then connect the `ESP8266` using the UART.
+ 
+
+
 
