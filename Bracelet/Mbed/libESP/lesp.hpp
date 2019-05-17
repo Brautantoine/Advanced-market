@@ -5,6 +5,8 @@
 #include <sstream>
 #include <mbed.h>
 
+extern Serial pc;
+
 class wifiAdapter
 {
     public :
@@ -20,8 +22,11 @@ class wifiAdapter
         
     private :
     
+        void rx_interrupt();
+    
         Serial& bridge;
         bool is_connected;
+        std::string buffer;
 };
 
 # endif //LESP_HPP
