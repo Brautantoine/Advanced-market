@@ -11,7 +11,7 @@ References: PRFC 1
 
 Le serveur de gestion des paniers à pour but :
 
-	1. Récuperer des paniers (fichier au format `.json` dans un dossier spécifique) et les mettres en attente
-	2. Envoyer vers un terminal un panier selon le protocole défini
-	3. Valider un panier préparé par un opérateur
-	4. Mettre à jour la table d'un terminal
+1. Récuperer des paniers (fichier au format `.json` dans un dossier spécifique) et les mettres en attente
+2. Envoyer vers un terminal un panier selon le protocole défini
+3. Valider un panier préparé par un opérateur
+4. Mettre à jour la table d'un terminal
