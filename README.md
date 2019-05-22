@@ -1,7 +1,6 @@
-# Advanced marché de Cachan #
+# Advanced marché de Cachan <img src="http://www.iut-cachan.u-psud.fr/skins/newcachan/resources/img/xLogo-UPSud-Saclay_horizontal_IUT-CACHAN.jpg.pagespeed.ic.cqHiSmvYr4.jpg" alt="logo-iut-cachan" width="180" align="right" />
 
-Copyright Advanced marché de Cachan (C) 2019 Antoine Braut - Bastien Duprey for IUT de Cachan <img src="http://www.iut-cachan.u-psud.fr/skins/newcachan/resources/img/xLogo-UPSud-Saclay_horizontal_IUT-CACHAN.jpg.pagespeed.ic.cqHiSmvYr4.jpg" alt="drawing" width="120" />
-
+Copyright Advanced marché de Cachan (C) 2019 Antoine Braut - Bastien Duprey for IUT de Cachan 
 
 ## Qu'est ce qu'Advanced marché de Cachan ? ##
 
@@ -17,6 +16,8 @@ Advanced marché de Cachan est un projet ayant pour but de créer une solution p
 <img src="https://github.com/Brautantoine/projet_du_chemar/blob/master/gestionDeProjet/Schema/Synoptique/SynoptiqueV1.png"  alt="drawing" width="720"/>
 
 >Les terminaux communique avec le serveur en wi-fi, puis sont capable d'opérer hors-ligne jusqu'à la validation du panier afin de pouvoir fonctionner au fin fond d'un entrepôt.
+
+## Et pour la liste des produits ? ##
 
 La liste des produits est stocké sur une base de données MySQL avec laquelle communique le serveur de gestion des paniers. Tous les fichiers relatifs à la liste des produits sont disponible dans ce [dossier](https://github.com/Brautantoine/projet_du_chemar/tree/master/productTable) ainsi que le dossier du serveur pour la partie base de données.
 
