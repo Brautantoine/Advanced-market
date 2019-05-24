@@ -15,3 +15,11 @@ Le serveur de gestion des paniers à pour but :
 2. Envoyer vers un terminal un panier selon le protocole défini
 3. Valider un panier préparé par un opérateur
 4. Mettre à jour la table d'un terminal
+
+## 2. Récupération et traitement des paniers ##
+
+Les paniers sont créés en amont (site de e-commerce, borne de commande ...) puis envoyé indépendament du serveur dans un dossier spécifique. 
+>Les paniers sont décris dans un fichier .json ou .xml ( les fichiers .xml sont pour l'instant une idée plus qu'autre chose ...)
+Le serveur scrute en permanence le dossier pour détecter l'apparition d'un nouveau fichier de panier. Lors de l'apparition d'un fichier de panier, le serveur le récupére, le traite et le place en attente de traitement. Le fichier de panier est alors déplacer vers un autre dossier.
+
+## 3. Envoyer un panier à un opérateur ##
