@@ -1,5 +1,9 @@
 package com.example.marchdecachan;
 
+// Toast type color & Icon : https://www.codingdemos.com/android-toast-message-tutorial/
+
+
+import android.animation.TypeConverter;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -16,15 +20,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,9 +39,8 @@ public class FenProduits extends AppCompatActivity {
     private TextView mBluetoothStatus;
     private BluetoothAdapter mBTAdapter;
     private Set<BluetoothDevice> mPairedDevices;
-    //private ArrayAdapter<String> mBTArrayAdapter;
-    private TextView mReadBuffer;
     private ArrayAdapter<String> mBTArrayAdapter;
+    private TextView mReadBuffer;
 
     private final String TAG = MainActivity.class.getSimpleName();
     private Handler mHandler; // Our  main handler that will receive callback notifications
@@ -49,11 +51,19 @@ public class FenProduits extends AppCompatActivity {
     private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");       // "random" unique identifier
 
     // #defines for identifying shared types between calling functions
-    private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
-    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private final static int CONNECTING_STATUS = 3; // used in bluetooth handler to identify message status
+    private final static int REQUEST_ENABLE_BT = 1;     // used to identify adding bluetooth names
+    private final static int MESSAGE_READ = 2;          // used in bluetooth handler to identify message update
+    private final static int CONNECTING_STATUS = 3;     // used in bluetooth handler to identify message status
 
     private Thread threadCoBt;
+
+    // Produits
+    private TextView titreProduit;  // textView_produit
+    private TextView QtProduit;     // textView_quantite
+    private TextView produitEmpl;   // textView_emplacement
+    private ListView listeProduits; // Liste_Produit
+    private ArrayAdapter<String> mArrayAdapterListProduitScannes;
+    private ArrayAdapter<Produit> mProduitsArrayAdapter;            // panier
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +77,21 @@ public class FenProduits extends AppCompatActivity {
         mBluetoothStatus = (TextView)findViewById(R.id.ID_textView_BTStatus);
 
         mReadBuffer = (TextView)findViewById(R.id.ID_readBuffer);
+        BTConnecte = false;
 
+        // gestion produits
+        titreProduit = (TextView)findViewById(R.id.textView_produit);
+        QtProduit = (TextView)findViewById(R.id.textView_quantite);
+        produitEmpl = (TextView)findViewById(R.id.textView_emplacement);
+        listeProduits = (ListView)findViewById(R.id.Liste_Produit);
+        mArrayAdapterListProduitScannes = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1);
+        listeProduits.setAdapter(mArrayAdapterListProduitScannes);       // ajoute le tableau a la liste visuelle
+        mArrayAdapterListProduitScannes.clear();
+
+        titreProduit.setText("STM32F7");
+        QtProduit.setText("4");
+
+        // recep & aff code barre scanne
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
                 if(msg.what == MESSAGE_READ){
@@ -78,21 +102,36 @@ public class FenProduits extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     mReadBuffer.setText(readMessage);
+
+                    // test du nom pour affichage du produit dans la liste des valides (+ passage par table de correspondance)
+                    if(titreProduit.getText().toString().trim().equals(readMessage.trim())) {
+                        if(mArrayAdapterListProduitScannes != null) {
+                            mArrayAdapterListProduitScannes.add(readMessage);
+                            mArrayAdapterListProduitScannes.notifyDataSetChanged();
+
+                            // test Quantite
+                            verifQuantiteProduit(QtProduit.getText().toString().trim());
+                        }
+                        //else ToastMsgErreur("ERREUR SCAN:\nAdapter List = Null");
+                    }
+                    else ToastMsgErreur("ERREUR SCAN:\nProduit attendu = " + titreProduit.getText()+ "Produit scanné = " + readMessage );
                 }
 
                 if(msg.what == CONNECTING_STATUS){
                     if(msg.arg1 == 1)
-                        mBluetoothStatus.setText("Appareil Connecté: " + (String)(msg.obj));
+                        mBluetoothStatus.setText("Connecté à: " + (String)(msg.obj));
                     else
                         mBluetoothStatus.setText("Echec de la Connection");
                 }
             }
         };
 
-
         // getion premiere fenetre
         final Button click_buttonValidCommand = (Button) findViewById(R.id.button_ValidCommande);
-        final Intent monIntent = new Intent(this, MainActivity.class);         // lien avec la 2eme page
+        final Intent monIntent2 = new Intent(this, MainActivity.class);         // lien avec la 2eme page
+
+        final Intent intent1 = getIntent();
+        String msgServeur = intent1.getStringExtra(MainActivity.recepServeur);
 
         // ouvre la Deuxieme fenetre : Liste des Produits
         click_buttonValidCommand.setOnClickListener(new View.OnClickListener() {
@@ -102,26 +141,82 @@ public class FenProduits extends AppCompatActivity {
                 //mBluetoothStatus.setText("Bluetooth deconnecté");
 
                 // charge l'autre fenetre
-                startActivity(monIntent);
+                startActivity(monIntent2);
             }
         });
 
+        // lance la connexion a l'ouverture de la fenetre
+        autoConnectScanner(null);
 
         // gestion BLuetooth
-        BTConnecte = false;
         mBtnConnexionBluetooth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                bluetoothOn(v);
-                listPairedDevices(v);
-                if(BTConnecte == false)
-                    discover(v);
-
+                autoConnectScanner(v);
             }
         });
 
+        // recupere le panier
+        //remplissage_Panier(msgServeur);
 
+    } // Fin onCreate
+
+    private void verifQuantiteProduit (String Qt) {
+        if(!Qt.equals("1")) {
+            Toast toastQt = Toast.makeText(getApplicationContext(), "Attention Quantité attendue: " + Qt.toString(), Toast.LENGTH_SHORT);
+            toastQt.show();
+        }
     }
+
+
+    // recupere la liste de tous les produits et de leurs quantites issu du Serveur
+    private void remplissage_Panier (String msgServ) {
+        int start = 4;
+        int position = 12;      // init apres premier item
+        int id=000000, qt=000;
+
+        for(int i=0; i<msgServ.length(); i++) {
+            // produit
+            if (msgServ.charAt(i) == '.') {
+                position = i;
+
+                String substr = msgServ.substring(start, position);
+                id = Integer.parseInt(substr);
+                start = position + 1;
+            }
+
+            // quantite
+            else if (msgServ.charAt(i) == '/') {
+                position = i;
+
+                String substr = msgServ.substring(start, position);
+                qt = Integer.parseInt(substr);
+
+                // creation du nouveau produit
+                Produit produit= new Produit ();
+                produit.init_Produit(id, qt);
+
+                mProduitsArrayAdapter.add(produit);         // ajoute un produit au panier
+
+                start = position + 1;
+            }
+        }
+    }
+
+
+    // rassemble les etapes de la connexion bluetooth automatique au Scanner
+    private boolean autoConnectScanner (View v) {
+        if(bluetoothOn(v)) {
+            listPairedDevices(v);
+            if (BTConnecte == false)
+                discover(v);
+        }
+
+        if(BTConnecte)
+            return true;
+        else return false;
+    }
+
 
     // creer un message
     private void ToastMsgErreur(String msg) {
@@ -132,16 +227,18 @@ public class FenProduits extends AppCompatActivity {
     }
 
     // Active le Bluetooth
-    private void bluetoothOn(View view){
+    private boolean bluetoothOn(View view){
         try {
             if (!mBTAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
             mBluetoothStatus.setText("Bluetooth activé");
+            return true;
         }
         catch (Exception e) {
             ToastMsgErreur("ERREUR Bluetooth:\nConnexion Bluetooth");
+            return false;
         }
     }
 
@@ -154,14 +251,13 @@ public class FenProduits extends AppCompatActivity {
             for (BluetoothDevice device : mPairedDevices) {
                 mBTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
 
-                if (device.getAddress().equals("00:1C:97:14:35:02")==true) {               // device.getName() == "Wasp Barcode" &&
+                if (device.getAddress().equals("00:1C:97:14:35:02")==true) {               // recherche l'appareil avec la meme addr MAC (= Wasp Barcode)
                     // Connexion à l'appareil
                     BluetoothConnectionDevice(device.getAddress());           // connecte le Scanner s'il est detecte
-                    mBluetoothStatus.setText("BT Connecté à " + device.getName());
+                    mBluetoothStatus.setText("Appairé à " + device.getName());
                     BTConnecte = true;
-                    break;
                 }
-                else mBluetoothStatus.setText("Appareil trouvé: " + device.getName());
+                //else mBluetoothStatus.setText("Appareil trouvé: " + device.getName());
             }
         }
         else
@@ -200,10 +296,10 @@ public class FenProduits extends AppCompatActivity {
                     // add the name to the list
                     //mBTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                     //mBTArrayAdapter.notifyDataSetChanged();
-                    if (device.getAddress().equals("00:1C:97:14:35:02")) {               // device.getName() == "Wasp Barcode" &&
+                    if (device.getAddress().equals("00:1C:97:14:35:02")) {               // recherche l'appareil avec la meme addr MAC (= Wasp Barcode)
                         // Connexion à l'appareil
                         BluetoothConnectionDevice(device.getAddress());           // connecte le Scanner s'il est detecte
-                        mBluetoothStatus.setText("Bluetooth Connecté à " + device.getName());
+                        mBluetoothStatus.setText("Connecté à " + device.getName());
                         BTConnecte = true;
                     }
                 }
