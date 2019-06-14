@@ -30,6 +30,14 @@ namespace easyTCP
       ip_addr = _ip;
       readable = 0;
     }
+    connectedClient(const connectedClient& that)
+    {
+      this->socket = that.socket;
+      this->ip_addr = that.ip_addr;
+      this->readable = that.readable;
+      this->msg = that.msg;
+    }
+    connectedClient(){}
   };
 
   const int MAXCONNECTIONS = 5;

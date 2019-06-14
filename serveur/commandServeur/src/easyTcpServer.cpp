@@ -114,7 +114,7 @@ void tcp_server::_listen_for_client()
                 {
                   try
                   {
-                  //std::cerr << "client disconnected : " << i << std::endl;
+                  std::cerr << "client disconnected : " << i << std::endl;
                     //Somebody disconnected , get his details and print;
 
                     //Close the socket and mark as 0 in list for reuse
@@ -126,6 +126,7 @@ void tcp_server::_listen_for_client()
                   }
                   catch(std::exception e)
                   {
+                    std::cerr << "error disconnect" << std::endl;
                     std::cerr << e.what() << '\n';
                   }
                 }
@@ -146,6 +147,7 @@ void tcp_server::_listen_for_client()
                   }
                   catch(std::exception e)
                   {
+                    std::cerr << "error 2" << std::endl;
                     std::cerr << e.what() << '\n';
                   }
                 }
