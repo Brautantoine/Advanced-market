@@ -4,8 +4,10 @@
 #include "card.hpp"
 #include "easyTcpServer.hpp"
 
-#include <thread>
+#include <exception>
 #include <sstream>
+#include <ctime>
+
 
 using easyTCP::connectedClient;
 using  Card::card;
@@ -15,7 +17,7 @@ class io_interface
   public:
     io_interface(){};
     void card_exchange();
-    void card_exchange(connectedClient client, tcp_server* serv);
+    void card_exchange(connectedClient& client, tcp_server* serv);
     virtual ~io_interface();
 
     int detect_protocole(connectedClient& client);
@@ -24,12 +26,7 @@ class io_interface
     //
 
   private:
-    void _exchange_task();
-    //connectedClient _client;
-    //tcp_server* _serv;
     card panier;
-
-    std::thread _exchange_thread;
 };
 
 

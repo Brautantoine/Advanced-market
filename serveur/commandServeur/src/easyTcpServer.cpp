@@ -124,7 +124,7 @@ void tcp_server::_listen_for_client()
                     _disconnect_lock.unlock();
                     //clientTable.shrink_to_fit();
                   }
-                  catch(std::exception e)
+                  catch(const std::exception& e)
                   {
                     std::cerr << "error disconnect" << std::endl;
                     std::cerr << e.what() << '\n';
@@ -145,7 +145,7 @@ void tcp_server::_listen_for_client()
                     clientTable.at(i).msg.emplace(buffer);
                     //send(sd , buffer , strlen(buffer) , 0 );
                   }
-                  catch(std::exception e)
+                  catch(const std::exception& e)
                   {
                     std::cerr << "error 2" << std::endl;
                     std::cerr << e.what() << '\n';

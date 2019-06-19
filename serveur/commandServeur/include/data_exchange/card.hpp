@@ -35,12 +35,12 @@ namespace Card
     void add_article(const article& new_article)
     {
       article_list.emplace_back(new_article);
-      qt++;
+      this->qt++;
     }
     void add_article(std::string name, std::string unique_id, std::string emplacement, int qt)
     {
       article_list.emplace_back(name,unique_id,emplacement,qt);
-      qt++;
+      this->qt++;
     }
   };
 }

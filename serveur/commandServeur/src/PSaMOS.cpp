@@ -32,9 +32,10 @@ int main(int argc, char** argv)
           switch(ioservice.detect_protocole(serv.get_client()->at(i)))
           {
             case 1:
-            ioservice.card_exchange(serv.get_client()->at(i),&serv);
-              serv.get_client()->at(i).readable --;
-              serv.get_client()->at(i).msg.pop();
+              ioservice.card_exchange(serv.get_client()->at(i),&serv);
+              std::cerr << "INFO : restart listening" << '\n';
+              //serv.get_client()->at(i).readable --;
+              //serv.get_client()->at(i).msg.pop();
               break;
 
             default:
@@ -43,21 +44,8 @@ int main(int argc, char** argv)
             serv.get_client()->at(i).readable --;
             serv.get_client()->at(i).msg.pop();
           }
-          /*if(serv.get_client()->at(i).msg.front().at(0) == 0x10 && serv.get_client()->at(i).msg.front().at(1) == 0x01)
-          {
-            ioservice.card_exchange(serv.get_client()->at(i),&serv);
-              serv.get_client()->at(i).readable --;
-              serv.get_client()->at(i).msg.pop();
-          }
-          else
-          {
-            std::cout << "[" << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << "] echo to client : " << i << " - " << serv.get_client()->at(i).msg.front().c_str() << '\n';
-            serv.send_to_client(serv.get_client()->at(i),serv.get_client()->at(i).msg.front().c_str());
-            serv.get_client()->at(i).readable --;
-            serv.get_client()->at(i).msg.pop();
-          }*/
       }
-      catch(std::exception e)
+      catch(const std::exception& e)
       {
         std::cerr << "[" << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << "] Exception occured : " << e.what() << '\n';
       }

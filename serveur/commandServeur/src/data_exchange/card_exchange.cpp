@@ -4,9 +4,11 @@ void io_interface::card_exchange()
 {
 
 }
-void io_interface::card_exchange(connectedClient client, tcp_server* server)
+void io_interface::card_exchange(connectedClient& client, tcp_server* server)
 {
   // Test Zone //
+  try
+  {
   std::cerr << "start constructor of card_exchange" << '\n';
   panier = card("2B");
   panier.add_article("STM32F7","4a9acc","A1",2);
@@ -18,37 +20,74 @@ void io_interface::card_exchange(connectedClient client, tcp_server* server)
   std::cerr << "start exchange sequence" << '\n';
   std::ostringstream tx_buffer;
 
-  tx_buffer << (char)0X10 << char(0x10) << panier.card_id << panier.qt;
+  if(panier.qt > 9)
+    tx_buffer << (char)0X10 << char(0x10) << panier.card_id << panier.qt;
+  else
+    tx_buffer << (char)0X10 << char(0x10) << panier.card_id << "0" << panier.qt;
   for(int i=0;i<panier.article_list.size();i++)
   {
-    tx_buffer << panier.article_list.at(i).unique_id << "." << panier.article_list.at(i).qt << "/";
+    if(panier.article_list.at(i).qt > 9)
+      tx_buffer << panier.article_list.at(i).unique_id << "." << panier.article_list.at(i).qt << "/";
+    else
+      tx_buffer << panier.article_list.at(i).unique_id << "." << "0" << panier.article_list.at(i).qt << "/";
   }
   tx_buffer << char(0XFF);
   std::cerr << "J'envoi un panier : " << tx_buffer.str() << std::endl;
   system(("echo "+tx_buffer.str()+" | hexdump").c_str());
   server->send_to_client(client,tx_buffer.str());
+  client.msg.pop();
+  client.readable --;
+  std::cerr << "VERBOSE : " << client.readable << '\n';
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << "ERROR : " << e.what() << '\n';
+  }
+  try
+  {
+    bool succes(false);
+    int cpt(0);
+
+    clock_t begin = clock();
+    clock_t end;
+
+    while(!succes)
+    {
+      end = clock();
+      if (client.readable > 0)
+      {
+        std::cerr << "VERBOSE : " << client.msg.front() << "." << client.readable << '\n';
+        if(client.msg.front().at(0) == 0x10 && client.msg.front().at(1) == 0x01)
+        {
+          std::cerr << "INFO : j'ai une reponse de panier" << '\n';
+          if(client.msg.front().at(2)-48 == panier.qt)
+          {
+            std::cerr << "INFO : Panier valide" << '\n';
+            succes=true;
+          }
+          client.msg.pop();
+          client.readable --;
+          cpt++;
+        }
+
+
+      }
+      if(double(end - begin) / CLOCKS_PER_SEC > 30.0f)
+        throw std::runtime_error("ERROR : temps alloue depasse");
+    }
+    std::cerr << "INFO : Exit from validation" << '\n';
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  std::cerr << "INFO : exit card exchange" << '\n';
 }
 
 io_interface::~io_interface()
 {
   std::cerr << "start destructor " << '\n';
   //_exchange_thread.join();
-
-}
-
-void io_interface::_exchange_task()
-{
-  /*std::cerr << "start exchange sequence" << '\n';
-  std::ostringstream tx_buffer;
-
-  tx_buffer << 0X1001 << panier.card_id << (int)panier.qt;
-  for(int i=0;i<panier.article_list.size();i++)
-  {
-    tx_buffer << panier.article_list.at(i).unique_id << "." << panier.article_list.at(i).qt << "/";
-  }
-  tx_buffer << 0XFF;
-  std::cerr << "J'envoi un panier : " << tx_buffer.str() << std::endl;
-  _serv->send_to_client(_client,tx_buffer.str());*/
 
 }
 
