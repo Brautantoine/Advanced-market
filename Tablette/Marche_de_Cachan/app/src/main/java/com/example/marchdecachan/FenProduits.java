@@ -2,7 +2,6 @@ package com.example.marchdecachan;
 
 // Toast type color & Icon : https://www.codingdemos.com/android-toast-message-tutorial/
 
-
 import android.animation.TypeConverter;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -28,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,12 +58,14 @@ public class FenProduits extends AppCompatActivity {
     private Thread threadCoBt;
 
     // Produits
-    private TextView titreProduit;  // textView_produit
-    private TextView QtProduit;     // textView_quantite
-    private TextView produitEmpl;   // textView_emplacement
-    private ListView listeProduits; // Liste_Produit
+    private TextView titreProduit;      // textView_produit
+    private TextView QtProduit;         // textView_quantite
+    private TextView produitEmpl;       // textView_emplacement
+    private ListView listeProduits;     // Liste_Produit
     private ArrayAdapter<String> mArrayAdapterListProduitScannes;
-    private ArrayAdapter<Produit> mProduitsArrayAdapter;            // panier
+    private ArrayList<Produit> mProduitsArrayList;            // panier
+
+    public Button click_buttonValidCommand;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,14 +90,56 @@ public class FenProduits extends AppCompatActivity {
         listeProduits.setAdapter(mArrayAdapterListProduitScannes);       // ajoute le tableau a la liste visuelle
         mArrayAdapterListProduitScannes.clear();
 
-        titreProduit.setText("STM32F7");
-        QtProduit.setText("4");
+        // creation du panier
+        mProduitsArrayList = new ArrayList<Produit>();
+        Produit prod1 = new Produit();
+        prod1.init_Produit("f65eb4", 2);            // aston martin de james bond
+        mProduitsArrayList.add(prod1);
+        Produit prod2 = new Produit();
+        prod2.init_Produit("db6793", 1);            // PC MSI
+        mProduitsArrayList.add(prod2);
+
+        // getion premiere fenetre
+        final Button click_buttonValidCommand = (Button) findViewById(R.id.button_ValidCommande);
+        final Intent monIntent2 = new Intent(this, MainActivity.class);         // lien avec la 2eme page
+
+        final Intent intent1 = getIntent();
+        String msgServeur = intent1.getStringExtra(MainActivity.recepServ);
+
+        //click_buttonValidCommand.setEnabled(false);     // desactive le BP
+
+        // ouvre la Deuxieme fenetre : Liste des Produits
+        click_buttonValidCommand.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Produit prod;
+                try {           // empeche la validation tant que la commande est incomplete
+                    prod = mProduitsArrayList.get(0);
+                    Toast toastValid = Toast.makeText(getApplicationContext(), "Commande Non Complete\nProchain Produit: " + prod.nom_Produit, Toast.LENGTH_SHORT);      // color + icon
+                    toastValid.show();
+                }
+                catch (Exception e) {
+                    Toast toastValid = Toast.makeText(getApplicationContext(), "Valide Commande", Toast.LENGTH_SHORT);      // color + icon
+                    toastValid.show();
+
+                    // deconnecte le Bluetooth
+                    mConnectedThread.cancel();
+
+                    // charge l'autre fenetre
+                    startActivity(monIntent2);
+                }
+            }
+        });
+
+        //titreProduit.setText("Produit");
+        //QtProduit.setText("10000");
+        changementProduitAScanner();            // selectionne le premier produit de la liste
 
         // recep & aff code barre scanne
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
                 if(msg.what == MESSAGE_READ){
-                    String readMessage = null;
+                    // recup le produit scanne
+                    String readMessage = null;          // => ID
                     try {
                         readMessage = new String((byte[]) msg.obj, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
@@ -103,18 +147,33 @@ public class FenProduits extends AppCompatActivity {
                     }
                     mReadBuffer.setText(readMessage);
 
+                    Produit lastProd = mProduitsArrayList.get(0);           // recup du produit a scanne
+
                     // test du nom pour affichage du produit dans la liste des valides (+ passage par table de correspondance)
-                    if(titreProduit.getText().toString().trim().equals(readMessage.trim())) {
+                    //if(titreProduit.getText().toString().trim().equals(readMessage.trim())) {
+                    if(lastProd.ID_Produit.trim().equals(readMessage.trim())) {
                         if(mArrayAdapterListProduitScannes != null) {
-                            mArrayAdapterListProduitScannes.add(readMessage);
+                            mArrayAdapterListProduitScannes.add(lastProd.nom_Produit);      // ajout liste produits scannes et valides
                             mArrayAdapterListProduitScannes.notifyDataSetChanged();
 
-                            // test Quantite
+                            // aff msg Quantite
                             verifQuantiteProduit(QtProduit.getText().toString().trim());
+
+                            // validation produit
+                            validationProduit(readMessage.trim());
                         }
                         //else ToastMsgErreur("ERREUR SCAN:\nAdapter List = Null");
                     }
-                    else ToastMsgErreur("ERREUR SCAN:\nProduit attendu = " + titreProduit.getText()+ "Produit scanné = " + readMessage );
+                    else {
+                        // creation d'un nouveau produit pour aff l'erreur (Mauvais produit)
+                        //Produit scannedProd = new Produit();
+                        //scannedProd.init_Produit(readMessage.trim(), 0);
+
+                        ToastMsgErreur("ERREUR SCAN:\nID Produit attendu = " + lastProd.ID_Produit +
+                                /*"\nProduit attendu = " + titreProduit.getText() + */
+                                "\nID Produit scanne = " + readMessage.trim() /*+
+                                "\nProduit scanne = " + scannedProd.nom_Produit*/);
+                    }
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -125,25 +184,6 @@ public class FenProduits extends AppCompatActivity {
                 }
             }
         };
-
-        // getion premiere fenetre
-        final Button click_buttonValidCommand = (Button) findViewById(R.id.button_ValidCommande);
-        final Intent monIntent2 = new Intent(this, MainActivity.class);         // lien avec la 2eme page
-
-        final Intent intent1 = getIntent();
-        String msgServeur = intent1.getStringExtra(MainActivity.recepServeur);
-
-        // ouvre la Deuxieme fenetre : Liste des Produits
-        click_buttonValidCommand.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // deconnecte le Bluetooth
-                //mBTAdapter.disable(); // turn off
-                //mBluetoothStatus.setText("Bluetooth deconnecté");
-
-                // charge l'autre fenetre
-                startActivity(monIntent2);
-            }
-        });
 
         // lance la connexion a l'ouverture de la fenetre
         autoConnectScanner(null);
@@ -161,19 +201,70 @@ public class FenProduits extends AppCompatActivity {
 
     } // Fin onCreate
 
+    // msg de rappel de Quantite
     private void verifQuantiteProduit (String Qt) {
         if(!Qt.equals("1")) {
-            Toast toastQt = Toast.makeText(getApplicationContext(), "Attention Quantité attendue: " + Qt.toString(), Toast.LENGTH_SHORT);
+            Toast toastQt = Toast.makeText(getApplicationContext(), "Attention Quantité attendue: " + Qt, Toast.LENGTH_SHORT);      // color + icon
             toastQt.show();
         }
     }
 
+    // modification de l'interface pour aff le prochain produit
+    private boolean changementProduitAScanner () {
+        Produit lastProd = null;
+
+        try {
+            lastProd = mProduitsArrayList.get(0);       // recupere le (nouveau) premier produit de la liste
+        }
+        catch (Exception e) {           // cas du panier vide
+            Toast toast = Toast.makeText(getApplicationContext(), "Panier Vide", Toast.LENGTH_SHORT);      // color + icon
+            toast.show();
+            titreProduit.setText("Panier Vide");
+            QtProduit.setText("0");
+            produitEmpl.setText("..");
+
+            //click_buttonValidCommand.setEnabled(true);     // active le BP
+            return false;
+        }
+
+        titreProduit.setText(lastProd.nom_Produit);             // pas d'aff de l'ID
+        QtProduit.setText(Integer.toString(lastProd.QT_produit));
+        produitEmpl.setText(lastProd.emplacement_Produit);
+        return true;
+    }
+
+    // valide le produit scanne et le retire de la liste si c'est celui attendu
+    private void validationProduit (String produitScanne) {
+        Toast toast;
+        Produit lastProd = null;
+
+        try {
+            lastProd = mProduitsArrayList.get(0);
+        }
+        catch (Exception e) {
+            toast = Toast.makeText(getApplicationContext(), "validationProduit: Panier Vide", Toast.LENGTH_SHORT);      // color + icon
+            toast.show();
+            return;
+        }
+
+        // (+ ajouter passage par table de correspondance)
+
+        // verif produit scanne = premier produit de la liste
+        if(lastProd.ID_Produit.trim().equals(produitScanne.trim())) {
+            lastProd.produit_Valide = true;
+            mProduitsArrayList.remove(lastProd);
+
+            // changement : nouveau produit a scanner
+            changementProduitAScanner();
+        }
+    }
 
     // recupere la liste de tous les produits et de leurs quantites issu du Serveur
     private void remplissage_Panier (String msgServ) {
         int start = 4;
         int position = 12;      // init apres premier item
-        int id=000000, qt=000;
+        int qt=000;
+        String id = "000000";
 
         for(int i=0; i<msgServ.length(); i++) {
             // produit
@@ -181,7 +272,7 @@ public class FenProduits extends AppCompatActivity {
                 position = i;
 
                 String substr = msgServ.substring(start, position);
-                id = Integer.parseInt(substr);
+                id = substr;
                 start = position + 1;
             }
 
@@ -194,9 +285,12 @@ public class FenProduits extends AppCompatActivity {
 
                 // creation du nouveau produit
                 Produit produit= new Produit ();
-                produit.init_Produit(id, qt);
 
-                mProduitsArrayAdapter.add(produit);         // ajoute un produit au panier
+                // recup nom_Produit depuis liste Correspondance
+
+                produit.init_Produit(id, qt);       // nom produit
+
+                mProduitsArrayList.add(produit);    // ajoute un produit au panier
 
                 start = position + 1;
             }
@@ -428,5 +522,6 @@ public class FenProduits extends AppCompatActivity {
             } catch (IOException e) { }
         }
     }
+
 
 }
