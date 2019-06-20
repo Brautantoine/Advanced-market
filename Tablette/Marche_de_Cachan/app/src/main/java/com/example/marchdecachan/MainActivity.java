@@ -1,5 +1,6 @@
 package com.example.marchdecachan;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 // page d'acceuil : Connextion WIFI
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> arrayList;
     private Button mWIFISend;
 
-    static public String recepServ = null;
+    static public String recepServ = "";
+    static public String panier = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Connection au Serveur WIFI
         mWIFICo.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onClick(View v) {
                 try{
@@ -64,17 +68,6 @@ public class MainActivity extends AppCompatActivity {
                 catch (Exception e) {
                     ToastMsgErreur("ERREUR WIFI:\nConnexion WIFI Serveur");
                 }
-
-                // attente pendant la connexion (sur un autre Thread)
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (Exception ex) {
-                    mWIFIStatus.setText("ERREUR Connexion Wifi ...");
-                }
-
-                // envoi d'un premier msg (".") pour recevoir le msg de Bienvenue du serveur
-                wifiSend(v, ".");
             }
         });
 
@@ -82,15 +75,7 @@ public class MainActivity extends AppCompatActivity {
         mWIFISend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // demande Nv Panier au serveur
-                //new CommServ().execute("");
                 requeteNvPanier(v);
-                //wifiSend(v, "un panier !");
-
-                //new CommServ().execute("");
-
-
-
             }
         });
 
@@ -98,6 +83,77 @@ public class MainActivity extends AppCompatActivity {
         bpNvCommand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                while(recepServ == "") {
+                    Log.e("send. ", "send 1.1: recepServ = " + recepServ);
+                    try {
+                        Thread.sleep(500);
+                    }
+                    catch (Exception ex) {
+                        Log.e("Sleep ", "ERREUR Thread.sleep");
+                    }
+                }
+
+                // demande Nv Panier au serveur :
+                Log.e("send ", "send 1: Debut");
+
+                // envoi d'une requete de New Panier au serv
+                requeteNvPanier(v);
+
+                // bloque en attendant la reponse du serveur
+                while(recepServ == "") {
+                    Log.e("send ", "send 1.2: recepServ = " + recepServ);
+                    try {
+                        Thread.sleep(500);
+                    }
+                    catch (Exception ex) {
+                        Log.e("Sleep ", "ERREUR Thread.sleep");
+                    }
+                }
+
+                Log.e("co ", "recepServ 2 : " + recepServ);
+
+                String ID_Panier = null;
+                String QT_Panier = null;
+
+                for(int i = 0; i < recepServ.length(); i++) {
+                    if (recepServ.charAt(i) == ((char)0x10)) {
+                        //if (recepServ.charAt(i+1) == ((char)0x01))
+                        recepServ = recepServ.substring(i);
+                        break;
+                    }
+                }
+
+                panier = recepServ;
+
+                ID_Panier = recepServ.substring(2, 4);          // == 2b ?
+                Log.e("send ", "send 2.1. ID: " + ID_Panier);
+                QT_Panier = recepServ.substring(4, 6);          // == 02 ?
+                Log.e("send ", "send 2.2. QT: " + QT_Panier);
+
+                // envoie du msg de reception du panier
+                requeteRecepNvPanier(recepServ);
+
+                // attente de la validation du serveur
+                while(recepServ == "") {
+                    Log.e("send ", "send 2.1: recepServ = " + recepServ);
+                    try {
+                        Thread.sleep(500);
+                    }
+                    catch (Exception ex) {
+                        Log.e("Sleep ", "ERREUR Thread.sleep");
+                    }
+                }
+                Log.e("co ", "recepServ 4 : " + recepServ);
+
+                if(recepServ.substring(2, 4).equals(ID_Panier)) {     // verifi que la validation correspond au panier actuel
+                    Log.e("send ", "send 3: " + recepServ.substring(2, 4));
+                }
+                else Log.e("send ", "ERREUR send 3: ID: " + recepServ.substring(2, 4) + " != " + ID_Panier);
+
+                Log.e("send ", "send 4: Fin");
+                recepServ = "";           // RAZ de la variable de "reponse du serveur"
+
                 try {
                     wifiOff(v);     // coupe la liaison WIFI
                 }
@@ -105,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     ToastMsgErreur("ERREUR WIFI:\nDéconnexion WIFI");
                 }
 
-                monIntent.putExtra(recepServ, recepServ);
+                monIntent.putExtra(panier, panier);
                 startActivity(monIntent);
             }
         });
@@ -167,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             super.onProgressUpdate(values);
             //response received from server
             //mWIFIStatus.setText("onProgressUpdate:  " + values[0]);
-            Log.e("onProgressUpdate ", "response: " + values[0]);
+            Log.e("onProgressUpdate ", "response: " + values[0]);       // affichage a la fin de l'echange !
         }
     }
 
@@ -205,8 +261,20 @@ public class MainActivity extends AppCompatActivity {
     private void requeteNvPanier (View v) {
         String messagetx = new String(new byte[] {0x10, 0x01});
 
+        recepServ = "";           // RAZ de la variable de "reponse du serveur"
+
         // envoie de la requete au serveur
         wifiSend(v, messagetx);        // View = null, requete = 0x1001
+
+        Log.e("requeteNvPanier", "requeteNvPanier: " + messagetx);
+
+        // attente pendant la connexion (sur un autre Thread)
+        try {
+            Thread.sleep(1000);
+        }
+        catch (Exception ex) {
+            mWIFIStatus.setText("ERREUR recep requeteNvPanier");
+        }
     }
 
     // envoie une trame demandant un nouveau panier
@@ -214,58 +282,30 @@ public class MainActivity extends AppCompatActivity {
         String messagetx = new String(new byte[] {0x10, 0x01});
 
         //messagetx += reponseServ.substring(2, 2);     // recup ID Panier
-        messagetx += reponseServ.substring(3, 4);     // recup QT Produit dans Panier
+        messagetx += reponseServ.substring(5, 6);     // recup QT Produit dans Panier
 
+/*
+        recepServ = "";
+
+        try {
+            Thread.sleep(1000);
+        }
+        catch (Exception ex) {
+            mWIFIStatus.setText("ERREUR recep requeteNvPanier");
+        }
+*/
         // envoie de la requete au serveur
         wifiSend(null, messagetx);        // View = null, requete = 0x1001
-    }
 
+        Log.e("requeteRecepNvPanier", "requeteRecepNvPanier");
 
-
-
-
-
-
-    // permet de gerer la communication avec le serveur en parallele du reste du programme
-    public class CommServ extends AsyncTask<String, String, Void> {
-
-        @Override
-        protected Void doInBackground(String... message) {
-            String ID_Panier = null;
-
-            Log.e("doInBackground ", "doInBackground 1: " + message[0]);
-
-            // envoi d'une requete de New Panier au serv
-            requeteNvPanier(null);
-
-            // bloque ne attendant la reponse du serveur
-            while(recepServ == null);
-
-            ID_Panier = recepServ.substring(2, 2);
-            Log.e("doInBackground ", "doInBackground 2: " + ID_Panier);
-            // envoie du msg de reception du panier
-            requeteRecepNvPanier(recepServ);
-            recepServ = null;           // RAZ de la variable de "reponse du serveur"
-
-            // attente de la validation du serveur
-            while(recepServ == null);
-
-            if(recepServ.substring(2,2).equals(ID_Panier)) {     // verifi que la validation correspond au panier actuel
-                recepServ = null;           // RAZ de la variable de "reponse du serveur"
-                Log.e("doInBackground ", "doInBackground 3: " + recepServ.substring(2,2));
-            }
-            else Log.e("doInBackground ", "ERREUR doInBackground 3: " + recepServ.substring(2,2));
-            return null;
+        // attente pendant la connexion (sur un autre Thread)
+        try {
+            Thread.sleep(1000);
         }
-
-        @Override
-        protected void onProgressUpdate(String... values) {         // MAJ IU ici
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.e("onProgressUpdate ", "response: " + values[0]);
+        catch (Exception ex) {
+            mWIFIStatus.setText("ERREUR recep requeteRecepNvPanier");
         }
     }
-
-
 
 }

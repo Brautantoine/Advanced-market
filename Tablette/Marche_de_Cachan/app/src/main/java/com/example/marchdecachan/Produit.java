@@ -28,13 +28,18 @@ class Produit {
                 // ID, Nom Emplacement
                 { "f65eb4", "Aston Martin de james Bond" , "D8"},
                 { "cb091d", "Generateur d'alcool infini" , "C9"},
+                { "db2915", "Kebab sans oignons" , "B4"},
                 { "aecd97", "Robe de Soiree" , "C3"},
+                { "cbab97", "Guitare Electro Acoustique" , "C8"},
+                { "db6793", "PC MSI" , "C1"},
+                { "4a9acc", "STM32F7" , "A1"},
+                { "65dd17", "Jus de fruit" , "B2"},
                 { "0e3120", "Saturne 5" , "E7"},
-                { "db6793", "PC MSI" , "C1"}
+                { "9d74b9", "Pompe à vide 12V" , "A2"}
         };
 
         for(int i = 0; i < mArrayListTableCorrespondance.length; i++) {
-            if (ID.equals(mArrayListTableCorrespondance[i][0]));
+            if (ID.equals(mArrayListTableCorrespondance[i][0]))     // compareTo == 0
                 produitCorrespondant = mArrayListTableCorrespondance[i];
         }
 

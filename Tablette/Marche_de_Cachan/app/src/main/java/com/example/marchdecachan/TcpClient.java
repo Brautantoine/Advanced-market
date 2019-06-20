@@ -32,7 +32,7 @@ public class TcpClient {
      */
     public TcpClient(OnMessageReceived listener , String IP) {
         SERVER_IP = IP;
-        //this.msgReturn = "run";
+
         mMessageListener = listener;
         Log.e("TcpClient: ", "Constructor");
     }
@@ -103,7 +103,7 @@ public class TcpClient {
                     if (mServerMessage != null && mMessageListener != null) {
                         //call the method messageReceived from MyActivity class
                         mMessageListener.messageReceived(mServerMessage);
-                        Log.e("TCP Client", "TCP mRun - mServerMessage: " + mRun);
+                        Log.e("TCP Client", "TCP mRun - mServerMessage: " + mServerMessage);
                     }
                 }
 

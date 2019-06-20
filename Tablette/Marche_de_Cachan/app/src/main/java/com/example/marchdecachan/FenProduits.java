@@ -90,23 +90,31 @@ public class FenProduits extends AppCompatActivity {
         listeProduits.setAdapter(mArrayAdapterListProduitScannes);       // ajoute le tableau a la liste visuelle
         mArrayAdapterListProduitScannes.clear();
 
-        // creation du panier
-        mProduitsArrayList = new ArrayList<Produit>();
-        Produit prod1 = new Produit();
-        prod1.init_Produit("f65eb4", 2);            // aston martin de james bond
-        mProduitsArrayList.add(prod1);
-        Produit prod2 = new Produit();
-        prod2.init_Produit("db6793", 1);            // PC MSI
-        mProduitsArrayList.add(prod2);
 
         // getion premiere fenetre
         final Button click_buttonValidCommand = (Button) findViewById(R.id.button_ValidCommande);
         final Intent monIntent2 = new Intent(this, MainActivity.class);         // lien avec la 2eme page
 
         final Intent intent1 = getIntent();
-        String msgServeur = intent1.getStringExtra(MainActivity.recepServ);
+        String msgServeur = intent1.getStringExtra(MainActivity.panier);        // ex trame : "** 2b 02 4a9cc . 02 / 0e3120 . 01 / \0"
 
-        //click_buttonValidCommand.setEnabled(false);     // desactive le BP
+
+        // creation du panier
+        mProduitsArrayList = new ArrayList<Produit>();
+
+        int qtTot = Integer.parseInt(msgServeur.substring(4, 6));     // recup QT[2] total panier
+
+        msgServeur = msgServeur.substring(6);       // suppr : ID_NPanier / ID_Panier / QT_Total
+
+        // tri des produits
+        for(int i = 0; i< qtTot; i++) {
+            Produit prod = new Produit();
+            String produit = msgServeur.substring(0 + (i*10), 6 + (i*10));
+            String quantite = msgServeur.substring(7 + (i*10), 9 + (i*10));
+
+            prod.init_Produit(produit, Integer.parseInt(quantite));
+            mProduitsArrayList.add(prod);
+        }
 
         // ouvre la Deuxieme fenetre : Liste des Produits
         click_buttonValidCommand.setOnClickListener(new View.OnClickListener() {
@@ -222,8 +230,6 @@ public class FenProduits extends AppCompatActivity {
             titreProduit.setText("Panier Vide");
             QtProduit.setText("0");
             produitEmpl.setText("..");
-
-            //click_buttonValidCommand.setEnabled(true);     // active le BP
             return false;
         }
 
