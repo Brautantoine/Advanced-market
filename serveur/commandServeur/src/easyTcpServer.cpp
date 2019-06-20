@@ -164,10 +164,12 @@ void tcp_server::stop_server()
 
 void tcp_server::send_to_client(int socket, std::string msg)
 {
+  msg.push_back('\n');
   send(socket, msg.c_str(), sizeof(msg), 0);
 }
 void tcp_server::send_to_client(connectedClient client, std::string msg)
 {
+  msg.push_back('\n');
   send(client.socket, msg.c_str(), sizeof(msg), 0);
 }
 

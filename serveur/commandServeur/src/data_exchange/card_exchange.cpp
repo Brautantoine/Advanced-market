@@ -60,15 +60,15 @@ void io_interface::card_exchange(connectedClient& client, tcp_server* server)
         if(client.msg.front().at(0) == 0x10 && client.msg.front().at(1) == 0x01)
         {
           std::cerr << "INFO : j'ai une reponse de panier" << '\n';
-          if(client.msg.front().at(2)-48 == panier.qt)
+          if(std::stoi(client.msg.front().substr(2,2)) == panier.qt) //substr(2,3)
           {
             std::cerr << "INFO : Panier valide" << '\n';
             succes=true;
           }
-          client.msg.pop();
-          client.readable --;
           cpt++;
         }
+        client.msg.pop();
+        client.readable --;
 
 
       }

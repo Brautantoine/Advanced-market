@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     if(!serv.get_new_client_fifo()->empty())
     {
       std::cout << "[" << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << "] welcome to the new client from " << serv.get_new_client_fifo()->front().ip_addr.c_str() << '\n';
-      serv.send_to_client(serv.get_new_client_fifo()->front(),"Welcome, I'm PSaMOS V0.0.0");
+      serv.send_to_client(serv.get_new_client_fifo()->front(),"Welcome, I'm PSaMOS V0.0.0\n");
       serv.get_new_client_fifo()->pop();
     }
     serv.lock_client();
