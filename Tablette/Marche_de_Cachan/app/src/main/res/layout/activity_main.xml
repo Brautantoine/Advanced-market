@@ -6,22 +6,12 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/ID_button_WIFISend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="404dp"
-        android:text="Send"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <EditText
         android:id="@+id/ID_IP"
         android:layout_width="144dp"
         android:layout_height="47dp"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="73dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="48dp"
         android:digits="0123456789."
         android:ems="10"
         android:inputType="numberDecimal"
@@ -67,8 +57,8 @@
         android:id="@+id/ID_button_WIFICo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="204dp"
+        android:layout_marginTop="48dp"
         android:text="Connexion WIFI"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -77,8 +67,8 @@
         android:id="@+id/button_nvCommand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="28dp"
-        android:layout_marginTop="464dp"
+        android:layout_marginStart="100dp"
+        android:layout_marginTop="428dp"
         android:text="Nouvelle Commande"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -99,19 +89,9 @@
         android:layout_width="28dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="84dp"
+        android:layout_marginTop="60dp"
         android:text="IP :"
         android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/button_debug"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="256dp"
-        android:layout_marginTop="404dp"
-        android:text="DEBUG"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

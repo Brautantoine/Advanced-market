@@ -29,11 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private Button bpNvCommand;
     private TextView mSelectIP;
 
-    private Button mBPDebug;
-
     public TcpClient mTcpClient;
     private ArrayList<String> arrayList;
-    private Button mWIFISend;
 
     static public String recepServ = "";
     static public String panier = "";
@@ -49,9 +46,6 @@ public class MainActivity extends AppCompatActivity {
         mWIFICo = (Button) findViewById(R.id.ID_button_WIFICo);
         bpNvCommand = (Button) findViewById(R.id.button_nvCommand);
         mSelectIP = (TextView) findViewById(R.id.ID_IP);
-        mWIFISend = (Button) findViewById(R.id.ID_button_WIFISend);
-
-        mBPDebug = (Button) findViewById(R.id.button_debug);
 
         arrayList = new ArrayList<String>();
 
@@ -68,14 +62,6 @@ public class MainActivity extends AppCompatActivity {
                 catch (Exception e) {
                     ToastMsgErreur("ERREUR WIFI:\nConnexion WIFI Serveur");
                 }
-            }
-        });
-
-        // envoi d'une trame au serveur
-        mWIFISend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requeteNvPanier(v);
             }
         });
 
@@ -166,24 +152,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        // permet de debug le serveur si commande non terminée depuis client
-        mBPDebug.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    String messagetx = new String(new byte[] {0x10, 0x01});
-
-                    messagetx += "2";     // recup QT Produit dans Panier
-
-                    // envoie de la requete au serveur
-                    wifiSend(null, messagetx);        // View = null, requete = 0x1001
-                }
-                catch (Exception e) {
-                    ToastMsgErreur("ERREUR WIFI:\nDEBUG WIFI");
-                }
-            }
-        });
     }
 
     // creer un message ERREUR
@@ -206,7 +174,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 //here the messageReceived method is implemented
                 public void messageReceived(String message) {
-                    mWifiEcho.setText("TCP - messageReceived: " + message);
+                    if(!message.equals(""))
+                        mWifiEcho.setText(/*"TCP - messageReceived: " +*/ message);
                     Log.e("messageReceived", "messageReceived: " + message);
                     //this method calls the onProgressUpdate
                     publishProgress(message);       // appel onProgressUpdate()
@@ -230,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     // connecte le Wifi + envoie un msg
     private void wifiOn(View view){
         // start connection to the server
-        mWIFIStatus.setText("New Connexion Wifi ...");
+        mWIFIStatus.setText("Nouvelle Connexion Wifi ...");
         new ConnectTask().execute("");
     }
 
@@ -284,16 +253,6 @@ public class MainActivity extends AppCompatActivity {
         //messagetx += reponseServ.substring(2, 2);     // recup ID Panier
         messagetx += reponseServ.substring(5, 6);     // recup QT Produit dans Panier
 
-/*
-        recepServ = "";
-
-        try {
-            Thread.sleep(1000);
-        }
-        catch (Exception ex) {
-            mWIFIStatus.setText("ERREUR recep requeteNvPanier");
-        }
-*/
         // envoie de la requete au serveur
         wifiSend(null, messagetx);        // View = null, requete = 0x1001
 

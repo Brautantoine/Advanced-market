@@ -161,7 +161,7 @@ public class FenProduits extends AppCompatActivity {
                     //if(titreProduit.getText().toString().trim().equals(readMessage.trim())) {
                     if(lastProd.ID_Produit.trim().equals(readMessage.trim())) {
                         if(mArrayAdapterListProduitScannes != null) {
-                            mArrayAdapterListProduitScannes.add(lastProd.nom_Produit);      // ajout liste produits scannes et valides
+                            mArrayAdapterListProduitScannes.add(lastProd.nom_Produit + "  x" + Integer.toString(lastProd.QT_produit));      // ajout liste produits scannes et valides
                             mArrayAdapterListProduitScannes.notifyDataSetChanged();
 
                             // aff msg Quantite
@@ -502,8 +502,7 @@ public class FenProduits extends AppCompatActivity {
                         SystemClock.sleep(1000); //pause and wait for rest of data. Adjust this depending on your sending speed.
                         bytes = mmInStream.available(); // how many bytes are ready to be read?
                         bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
-                        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-                                .sendToTarget(); // Send the obtained bytes to the UI activity
+                        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget(); // Send the obtained bytes to the UI activity
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
